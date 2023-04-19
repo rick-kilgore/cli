@@ -35,7 +35,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: "~1.17.1"
-          args: release -f .goreleaser.generated.yml --skip-publish --release-notes=CHANGELOG.md
+          args: release -f .goreleaser.generated.yml --skip-validate --skip-publish --release-notes=CHANGELOG.md
         env:
           GORELEASER_CURRENT_TAG: ${{ inputs.tag_name }}
       - name: Generate web manual pages
@@ -67,7 +67,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: "~1.17.1"
-          args: release -f .goreleaser.generated.yml --skip-publish --release-notes=CHANGELOG.md
+          args: release -f .goreleaser.generated.yml --skip-validate --skip-publish --release-notes=CHANGELOG.md
         env:
           GORELEASER_CURRENT_TAG: ${{ inputs.tag_name }}
       - uses: actions/upload-artifact@v3
@@ -95,7 +95,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: "~1.17.1"
-          args: release -f .goreleaser.generated.yml --skip-publish --release-notes=CHANGELOG.md
+          args: release -f .goreleaser.generated.yml --skip-validate --skip-publish --release-notes=CHANGELOG.md
         env:
           GORELEASER_CURRENT_TAG: ${{ inputs.tag_name }}
       - name: Set up MSBuild
