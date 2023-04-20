@@ -41,10 +41,12 @@ jobs:
       - name: Generate web manual pages
         run: |
           go run ./cmd/gen-docs --website --doc-path dist/manual
-          tar -czf dist/manual.tar.gz -C dist -- manual
+          tar -czvf dist/manual.tar.gz -C dist -- manual
       - uses: actions/upload-artifact@v3
         with:
           name: linux
+          if-no-files-found: error
+          retention-days: 7
           path: |
             dist/*.tar.gz
             dist/*.rpm
@@ -73,6 +75,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: macos
+          if-no-files-found: error
+          retention-days: 7
           path: |
             dist/*.tar.gz
             dist/*.zip
@@ -114,6 +118,16 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: windows
+          if-no-files-found: error
+          retention-days: 7
           path: |
             dist/*.zip
             dist/*.msi
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [linux, macos, windows]
+    steps:
+      - uses: actions/download-artifact@v3
+      - name: Display structure of downloaded files
+        run: ls -R

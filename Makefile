@@ -6,7 +6,7 @@ CGO_LDFLAGS ?= $(filter -g -L% -l% -O%,${LDFLAGS})
 export CGO_LDFLAGS
 
 EXE =
-ifeq ($(GOOS),windows)
+ifeq ($(shell go env GOOS),windows)
 EXE = .exe
 endif
 
@@ -16,16 +16,20 @@ endif
 bin/gh$(EXE): script/build
 	@script/build $@
 
-script/build: script/build.go
+script/build$(EXE): script/build.go
+ifeq ($(EXE),)
 	GOOS= GOARCH= GOARM= GOFLAGS= CGO_ENABLED= go build -o $@ $<
+else
+	go build -o $@ $<
+endif
 
 .PHONY: clean
-clean: script/build
-	@script/build $@
+clean: script/build$(EXE)
+	@$< $@
 
 .PHONY: manpages
-manpages: script/build
-	@script/build $@
+manpages: script/build$(EXE)
+	@$< $@
 
 # just a convenience task around `go test`
 .PHONY: test
