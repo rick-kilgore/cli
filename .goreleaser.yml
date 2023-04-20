@@ -15,7 +15,7 @@ builds:
     goarch: [amd64, arm64]
     hooks:
       post:
-        - cmd: script/sign '{{ .Path }}'
+        - cmd: ./script/sign '{{ .Path }}'
           output: true
     binary: bin/gh
     main: ./cmd/gh
@@ -37,7 +37,7 @@ builds:
     goarch: [386, amd64, arm64]
     hooks:
       post:
-        - cmd: script/sign '{{ .Path }}'
+        - cmd: ./script/sign '{{ .Path }}'
           output: true
     binary: bin/gh
     main: ./cmd/gh
