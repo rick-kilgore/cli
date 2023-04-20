@@ -10,15 +10,19 @@ before:
     - make manpages GH_VERSION={{.Version}}
 
 builds:
-  - id: macos
+  - id: macos #build:macos
     goos: [darwin]
     goarch: [amd64, arm64]
+    hooks:
+      post:
+        - cmd: script/sign '{{ .Path }}'
+          output: true
     binary: bin/gh
     main: ./cmd/gh
     ldflags:
       - -s -w -X github.com/cli/cli/v2/internal/build.Version={{.Version}} -X github.com/cli/cli/v2/internal/build.Date={{time "2006-01-02"}}
 
-  - id: linux
+  - id: linux #build:linux
     goos: [linux]
     goarch: [386, arm, amd64, arm64]
     env:
@@ -28,39 +32,47 @@ builds:
     ldflags:
       - -s -w -X github.com/cli/cli/v2/internal/build.Version={{.Version}} -X github.com/cli/cli/v2/internal/build.Date={{time "2006-01-02"}}
 
-  - id: windows
+  - id: windows #build:windows
     goos: [windows]
     goarch: [386, amd64, arm64]
     hooks:
       post:
-        - cmd: ./script/sign-windows-executable.sh '{{ .Path }}'
-          output: false
+        - cmd: script/sign '{{ .Path }}'
+          output: true
     binary: bin/gh
     main: ./cmd/gh
     ldflags:
       - -s -w -X github.com/cli/cli/v2/internal/build.Version={{.Version}} -X github.com/cli/cli/v2/internal/build.Date={{time "2006-01-02"}}
 
 archives:
-  - id: nix-archive
-    builds: [macos, linux]
-    name_template: >-
-      gh_{{ .Version }}_
-      {{- if eq .Os "darwin" }}macOS{{ else }}linux{{ end }}_
-      {{- .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  - id: linux-archive
+    builds: [linux]
+    name_template: "gh_{{ .Version }}_linux_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
     format: tar.gz
+    rlcp: true
     files:
       - LICENSE
       - ./share/man/man1/gh*.1
-  - id: win-archive
+  - id: macos-archive
+    builds: [macos]
+    name_template: "gh_{{ .Version }}_macOS_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    wrap_in_directory: true
+    format: zip
+    rlcp: true
+    files:
+      - LICENSE
+      - ./share/man/man1/gh*.1
+  - id: windows-archive
     builds: [windows]
     name_template: "gh_{{ .Version }}_windows_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: false
     format: zip
+    rlcp: true
     files:
       - LICENSE
 
-nfpms:
+nfpms: #build:linux
   - license: MIT
     maintainer: GitHub
     homepage: https://github.com/cli/cli

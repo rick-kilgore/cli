@@ -8,6 +8,7 @@
 /CHANGELOG.md
 /.goreleaser.generated.yml
 /script/build
+/script/build.exe
 
 # VS Code
 .vscode

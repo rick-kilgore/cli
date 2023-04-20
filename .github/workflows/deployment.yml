@@ -30,7 +30,7 @@ jobs:
       - name: Configure GoReleaser
         run: |
           touch CHANGELOG.md
-          sed '/- id: windows$/,/^$/d; /- id: macos$/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
+          sed '/#build:windows/,/^$/d; /#build:macos/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -64,7 +64,7 @@ jobs:
       - name: Configure GoReleaser
         run: |
           touch CHANGELOG.md
-          sed '/- id: windows$/,/^$/d; /- id: linux$/,/^$/d; /^nfpms/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
+          sed '/#build:windows/,/^$/d; /#build:linux/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -94,7 +94,15 @@ jobs:
         shell: bash
         run: |
           touch CHANGELOG.md
-          sed '/- id: macos$/,/^$/d; /- id: linux$/,/^$/d; /^nfpms/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
+          sed '/#build:macos/,/^$/d; /#build:linux/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
+      - name: Obtain signing certificate
+        id: obtain_cert
+        shell: bash
+        run: |
+          base64 -d <<<"$CERT_CONTENTS" > ./cert.pfx
+          printf "cert-file=%s\n" ".\\cert.pfx" >> $GITHUB_OUTPUT
+        env:
+          CERT_CONTENTS: ${{ secrets.WINDOWS_CERT_PFX }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -102,6 +110,8 @@ jobs:
           args: release -f .goreleaser.generated.yml --skip-validate --skip-publish --release-notes=CHANGELOG.md
         env:
           GORELEASER_CURRENT_TAG: ${{ inputs.tag_name }}
+          CERT_FILE: ${{ steps.obtain_cert.outputs.cert-file }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
       - name: Set up MSBuild
         id: setupmsbuild
         uses: microsoft/setup-msbuild@v1.3.1
@@ -115,6 +125,15 @@ jobs:
         run: |
           unzip -o "$ZIP_FILE"
           "${MSBUILD_PATH}\MSBuild.exe" ./build/windows/gh.wixproj -p:SourceDir="$PWD" -p:OutputPath="$PWD\dist" -p:OutputName="$(basename "$ZIP_FILE" ".zip")" -p:ProductVersion="$MSI_VERSION"
+      - name: Run GoReleaser
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path .\dist -Filter *.msi | ForEach-Object {
+              script\sign $_.FullName
+          }
+        env:
+          CERT_FILE: ${{ steps.obtain_cert.outputs.cert-file }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           name: windows
