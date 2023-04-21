@@ -7,7 +7,8 @@ release:
 
 before:
   hooks:
-    - make manpages GH_VERSION={{.Version}}
+    - >-
+      {{ if eq .Runtime.Goos "windows" }}echo{{ end }} make manpages GH_VERSION={{.Version}}
 
 builds:
   - id: macos #build:macos

@@ -119,17 +119,17 @@ jobs:
         id: buildmsi
         shell: bash
         env:
-          ZIP_FILE: dist/gh_${{ inputs.tag_name }}_windows_amd64.zip
           MSBUILD_PATH: ${{ steps.setupmsbuild.outputs.msbuildPath }}
           MSI_VERSION: ${{ inputs.tag_name }}
         run: |
+          ZIP_FILE=dist/gh_*_windows_amd64.zip
           unzip -o "$ZIP_FILE"
           "${MSBUILD_PATH}\MSBuild.exe" ./build/windows/gh.wixproj -p:SourceDir="$PWD" -p:OutputPath="$PWD\dist" -p:OutputName="$(basename "$ZIP_FILE" ".zip")" -p:ProductVersion="$MSI_VERSION"
       - name: Run GoReleaser
         shell: pwsh
         run: |
           Get-ChildItem -Path .\dist -Filter *.msi | ForEach-Object {
-              script\sign $_.FullName
+              .\script\sign $_.FullName
           }
         env:
           CERT_FILE: ${{ steps.obtain_cert.outputs.cert-file }}
