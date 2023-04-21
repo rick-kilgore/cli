@@ -37,7 +37,8 @@ builds:
     goarch: [386, amd64, arm64]
     hooks:
       post:
-        - cmd: ./script/sign '{{ .Path }}'
+        - cmd: >-
+            {{ if eq .Runtime.Goos "windows" }}.\script\sign{{ else }}./script/sign{{ end }} '{{ .Path }}'
           output: true
     binary: bin/gh
     main: ./cmd/gh
